@@ -16,8 +16,9 @@ public class ClearDatabaseStartupService : BackgroundService
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        foreach (var server in _mux.GetServers()) server.FlushDatabase();
+        if (Environment.GetEnvironmentVariable("CLEAR_REDIS_DATABASE") != "True") return Task.CompletedTask;
 
+        foreach (var server in _mux.GetServers()) server.FlushDatabase();
         _log.Debug("Redis keys cleared");
 
         return Task.CompletedTask;

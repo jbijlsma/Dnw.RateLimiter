@@ -7,7 +7,7 @@ using StackExchange.Redis;
 namespace Dnw.RateLimiter.Api;
 
 [UsedImplicitly]
-internal class Program
+public class Program
 {
     private static int Main(string[] args)
     {
