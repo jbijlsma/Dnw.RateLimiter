@@ -3,11 +3,17 @@
 Asp.net core example of a rate limiter with either a fixed- or sliding window. The code is loosely based on the examples
 here:
 
-https://developer.redis.com/develop/dotnet/aspnetcore/rate-limiting/fixed-window
-https://developer.redis.com/develop/dotnet/aspnetcore/rate-limiting/sliding-window
+https://developer.redis.com/develop/dotnet/aspnetcore/rate-limiting/fixed-window  
+https://developer.redis.com/develop/dotnet/aspnetcore/rate-limiting/sliding-window  
 https://developer.redis.com/develop/dotnet/aspnetcore/rate-limiting/middleware
 
 # Testing locally
+
+Start a redis instance locally (in docker):
+
+```
+ docker run -dp 6379:6379 redis
+```
 
 Use your IDE or run the Dnw.RateLimiter.Api project or on the commandline with:
 
