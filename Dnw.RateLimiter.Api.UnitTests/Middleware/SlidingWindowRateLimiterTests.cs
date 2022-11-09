@@ -3,7 +3,6 @@ using Dnw.RateLimiter.Api.Middleware;
 using Dnw.RateLimiter.Api.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using StackExchange.Redis;
@@ -15,51 +14,50 @@ public class SlidingWindowRateLimiterTests
 {
     private readonly IApiKeyExtractor _apiKeyExtractor;
     private readonly RequestDelegate _next;
-    private readonly IDatabase _redisDb;
     private readonly IOptionsMonitor<RateLimiterConfig> _optionsMonitor;
 
     private readonly SlidingWindowRateLimiter _rateLimiter;
-    
+    private readonly IDatabase _redisDb;
+
     public SlidingWindowRateLimiterTests()
     {
         _apiKeyExtractor = Substitute.For<IApiKeyExtractor>();
         _next = Substitute.For<RequestDelegate>();
         _redisDb = Substitute.For<IDatabase>();
-        
+
         var redisMux = Substitute.For<IConnectionMultiplexer>();
         redisMux.GetDatabase().Returns(_redisDb);
-        
-        var logger = Substitute.For<ILogger<SlidingWindowRateLimiter>>();
+
         _optionsMonitor = Substitute.For<IOptionsMonitor<RateLimiterConfig>>();
-        
-        _rateLimiter = new SlidingWindowRateLimiter(_next, redisMux, logger, _optionsMonitor);
+
+        _rateLimiter = new SlidingWindowRateLimiter(_next, redisMux, _optionsMonitor);
     }
-    
+
     [Fact]
     public async Task InvokeAsync()
     {
         // Given
         const int currentRequestCount = 10;
         const int maxRequestCountInWindow = 20;
-        
+
         _apiKeyExtractor.GetApiKey().Returns("apiKey");
-        
+
         var redisResult = RedisResult.Create(new RedisValue(currentRequestCount.ToString()));
         _redisDb
             .ScriptEvaluateAsync(SlidingWindowRateLimiter.LuaScript, Arg.Any<object>())
             .Returns(redisResult);
-        
+
         _optionsMonitor.CurrentValue.Returns(new RateLimiterConfig { MaxRequestsInWindow = maxRequestCountInWindow });
 
         var httpContext = new DefaultHttpContext();
-        
+
         // When
         await _rateLimiter.InvokeAsync(httpContext, _apiKeyExtractor);
 
         // Then
         await _next.Received(1).Invoke(httpContext);
     }
-    
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -68,9 +66,9 @@ public class SlidingWindowRateLimiterTests
     {
         // Given
         _apiKeyExtractor.GetApiKey().Returns(apiKey);
-        
+
         var httpContext = new DefaultHttpContext();
-        
+
         // When
         await _rateLimiter.InvokeAsync(httpContext, _apiKeyExtractor);
 
@@ -78,16 +76,16 @@ public class SlidingWindowRateLimiterTests
         httpContext.Response.StatusCode.Should().Be((int)HttpStatusCode.Unauthorized);
         await _next.DidNotReceive().Invoke(Arg.Any<HttpContext>());
     }
-    
+
     [Fact]
     public async Task InvokeAsync_MaxRequestsExceeded()
     {
         // Given
         const int currentRequestCount = 21;
         const int maxRequestCountInWindow = 20;
-        
+
         _apiKeyExtractor.GetApiKey().Returns("apiKey");
-        
+
         var redisResult = RedisResult.Create(new RedisValue(currentRequestCount.ToString()));
         _redisDb
             .ScriptEvaluateAsync(SlidingWindowRateLimiter.LuaScript, Arg.Any<object>())
@@ -96,7 +94,7 @@ public class SlidingWindowRateLimiterTests
         _optionsMonitor.CurrentValue.Returns(new RateLimiterConfig { MaxRequestsInWindow = maxRequestCountInWindow });
 
         var httpContext = new DefaultHttpContext();
-        
+
         // When
         await _rateLimiter.InvokeAsync(httpContext, _apiKeyExtractor);
 

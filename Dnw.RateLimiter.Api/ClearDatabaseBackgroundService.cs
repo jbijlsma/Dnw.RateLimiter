@@ -1,27 +1,25 @@
+using Serilog;
 using StackExchange.Redis;
+using ILogger = Serilog.ILogger;
 
 namespace Dnw.RateLimiter.Api;
 
 public class ClearDatabaseStartupService : BackgroundService
 {
+    private readonly ILogger _log = Log.ForContext<ClearDatabaseStartupService>();
     private readonly IConnectionMultiplexer _mux;
-    private readonly ILogger<ClearDatabaseStartupService> _logger;
 
-    public ClearDatabaseStartupService(IConnectionMultiplexer mux, ILogger<ClearDatabaseStartupService> logger)
+    public ClearDatabaseStartupService(IConnectionMultiplexer mux)
     {
         _mux = mux;
-        _logger = logger;
     }
-    
+
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        foreach (var server in _mux.GetServers())
-        {
-            server.FlushDatabase();
-        }
-        
-        _logger.LogInformation("Redis database keys cleared");
-        
+        foreach (var server in _mux.GetServers()) server.FlushDatabase();
+
+        _log.Debug("Redis keys cleared");
+
         return Task.CompletedTask;
     }
 }

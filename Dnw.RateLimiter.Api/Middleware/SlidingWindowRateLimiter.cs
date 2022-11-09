@@ -1,54 +1,15 @@
 using System.Net;
 using Dnw.RateLimiter.Api.Services;
 using Microsoft.Extensions.Options;
+using Serilog;
+using Serilog.Events;
 using StackExchange.Redis;
+using ILogger = Serilog.ILogger;
 
 namespace Dnw.RateLimiter.Api.Middleware;
 
 internal class SlidingWindowRateLimiter
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<SlidingWindowRateLimiter> _logger;
-    private readonly IOptionsMonitor<RateLimiterConfig> _optionsMonitor;
-    private readonly IDatabase _db;
-
-    public SlidingWindowRateLimiter(
-        RequestDelegate next, 
-        IConnectionMultiplexer mux,
-        ILogger<SlidingWindowRateLimiter> logger,
-        IOptionsMonitor<RateLimiterConfig> optionsMonitor)
-    {
-        _next = next;
-        _logger = logger;
-        _optionsMonitor = optionsMonitor;
-        _db = mux.GetDatabase();
-    }
-    
-    public async Task InvokeAsync(HttpContext httpContext, IApiKeyExtractor apiKeyExtractor)
-    {
-        var apiKey = apiKeyExtractor.GetApiKey();
-        if (string.IsNullOrWhiteSpace(apiKey))
-        {
-            httpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            return;
-        }
-
-        var config = _optionsMonitor.CurrentValue;
-
-        var requestCountInWindow = await _db.ScriptEvaluateAsync(LuaScript, new {key = new RedisKey(apiKey), window = config.WindowInSeconds});
-        
-        _logger.LogInformation("RequestCount during last {windowInSeconds} seconds: {requestCountInWindow} (Max: {maxRequestsInWindow})", config.WindowInSeconds, requestCountInWindow, config.MaxRequestsInWindow);
-        
-        if ((int)requestCountInWindow > config.MaxRequestsInWindow)
-        {
-            httpContext.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
-            return;
-        }
-        
-        await _next(httpContext);
-    }
-
-    internal static LuaScript LuaScript => LuaScript.Prepare(Script);
     private const string Script = @"
             local current_time = redis.call('TIME') -- t[1] contains seconds since epoch, t[2] contains milliseconds
             local trim_time = tonumber(current_time[1]) - @window -- trim_time  
@@ -63,4 +24,52 @@ internal class SlidingWindowRateLimiter
 
             return request_count
             ";
+
+    private readonly IDatabase _db;
+    private readonly ILogger _log = Log.ForContext<SlidingWindowRateLimiter>();
+    private readonly RequestDelegate _next;
+    private readonly IOptionsMonitor<RateLimiterConfig> _optionsMonitor;
+
+    public SlidingWindowRateLimiter(
+        RequestDelegate next,
+        IConnectionMultiplexer mux,
+        IOptionsMonitor<RateLimiterConfig> optionsMonitor)
+    {
+        _next = next;
+        _optionsMonitor = optionsMonitor;
+        _db = mux.GetDatabase();
+    }
+
+    internal static LuaScript LuaScript => LuaScript.Prepare(Script);
+
+    public async Task InvokeAsync(HttpContext httpContext, IApiKeyExtractor apiKeyExtractor)
+    {
+        var apiKey = apiKeyExtractor.GetApiKey();
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            httpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return;
+        }
+
+        var config = _optionsMonitor.CurrentValue;
+
+        var requestCountInWindow = await _db.ScriptEvaluateAsync(LuaScript,
+            new { key = new RedisKey(apiKey), window = config.WindowInSeconds });
+
+        var maxRequestsExceeded = (int)requestCountInWindow > config.MaxRequestsInWindow;
+
+        var logEventLevel = maxRequestsExceeded ? LogEventLevel.Warning : LogEventLevel.Debug;
+        _log.Write(
+            logEventLevel,
+            "RequestCount during last {windowInSeconds} seconds: {requestCountInWindow} (Max: {maxRequestsInWindow})",
+            config.WindowInSeconds, requestCountInWindow, config.MaxRequestsInWindow);
+
+        if (maxRequestsExceeded)
+        {
+            httpContext.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
+            return;
+        }
+
+        await _next(httpContext);
+    }
 }
