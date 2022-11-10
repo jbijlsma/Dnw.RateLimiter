@@ -27,7 +27,7 @@ public class Program
 
             // Add services to the container.
             // allowAdmin is necessary to be able to clear the keys on startup
-            builder.Services.AddSingleton<IConnectionMultiplexer>(
+            builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
                 ConnectionMultiplexer.Connect("localhost,allowAdmin=true"));
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<IApiKeyExtractor, ApiKeyExtractor>();

@@ -10,11 +10,11 @@ namespace Dnw.RateLimiter.Api.IntegrationTests.Utils;
 [UsedImplicitly]
 public class RateLimiterApiFactory : WebApplicationFactory<Program>
 {
-    private readonly ushort _redisPort;
+    private readonly string _connectionString;
 
-    public RateLimiterApiFactory(ushort redisPort)
+    public RateLimiterApiFactory(string connectionString)
     {
-        _redisPort = redisPort;
+        _connectionString = connectionString;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -23,9 +23,8 @@ public class RateLimiterApiFactory : WebApplicationFactory<Program>
         {
             services.RemoveAll(typeof(IConnectionMultiplexer));
 
-            var connectionString = $"localhost:{_redisPort}";
             services.AddSingleton<IConnectionMultiplexer>(
-                ConnectionMultiplexer.Connect(connectionString));
+                ConnectionMultiplexer.Connect(_connectionString));
         });
     }
 }
