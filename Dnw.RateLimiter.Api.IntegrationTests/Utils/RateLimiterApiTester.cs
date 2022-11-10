@@ -24,7 +24,9 @@ public static class RateLimiterApiTester
 
             setEnvironmentVariables();
 
-            var factory = new RateLimiterApiFactory(redisContainer.GetMappedPublicPort(6379));
+            var connectionString = redisContainer.ConnectionString;
+
+            var factory = new RateLimiterApiFactory(connectionString);
 
             var client = factory.CreateClient();
 
