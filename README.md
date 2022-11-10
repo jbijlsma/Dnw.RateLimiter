@@ -1,5 +1,7 @@
 # Introduction
 
+[![Build and Test](https://github.com/jbijlsma/Dnw.RateLimiter/actions/workflows/build.yml/badge.svg)](https://github.com/jbijlsma/Dnw.RateLimiter/actions/workflows/build.yml)
+
 Asp.net core example of a rate limiter with either a fixed- or sliding window. The code is loosely based on the examples
 here:
 
