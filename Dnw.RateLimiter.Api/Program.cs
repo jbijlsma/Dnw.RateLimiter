@@ -27,8 +27,9 @@ public class Program
 
             // Add services to the container.
             // allowAdmin is necessary to be able to clear the keys on startup
+            var redisConnectionString = builder.Configuration.GetValue<string>("RedisConnectionString");
             builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
-                ConnectionMultiplexer.Connect("localhost,allowAdmin=true"));
+                ConnectionMultiplexer.Connect(redisConnectionString));
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<IApiKeyExtractor, ApiKeyExtractor>();
 
@@ -44,11 +45,8 @@ public class Program
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
 

@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# helm generated test yaml files
+k8s/helm/.yamls
+
 # User-specific files
 *.rsuser
 *.suo
