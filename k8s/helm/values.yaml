@@ -1,0 +1,3 @@
+PrivateContainerRegistry: "localhost:5001/"
+RateLimiterApiServicePort: 5050
+RedisPort: 6379

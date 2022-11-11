@@ -1,0 +1,7 @@
+helm template '.' --output-dir '.yamls'
+
+helm upgrade dnw-rate-limiter-api . --dry-run --debug --install
+
+helm upgrade dnw-rate-limiter-api . --install
+
+helm delete dnw-rate-limiter-api
