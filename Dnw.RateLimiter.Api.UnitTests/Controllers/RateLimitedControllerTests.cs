@@ -23,7 +23,7 @@ public class RateLimitedControllerTests
         var actual = (JsonResult)controller.GetApiKey();
 
         // Then
-        var expected = new { key = expectedApiKey };
+        var expected = new { Key = expectedApiKey, Environment.MachineName };
         actual.Value.Should().BeEquivalentTo(expected);
     }
 }
