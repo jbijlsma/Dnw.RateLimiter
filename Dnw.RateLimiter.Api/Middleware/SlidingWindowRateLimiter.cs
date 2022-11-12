@@ -61,8 +61,11 @@ internal class SlidingWindowRateLimiter
         var logEventLevel = maxRequestsExceeded ? LogEventLevel.Warning : LogEventLevel.Debug;
         _log.Write(
             logEventLevel,
-            "RequestCount during last {windowInSeconds} seconds: {requestCountInWindow} (Max: {maxRequestsInWindow})",
-            config.WindowInSeconds, requestCountInWindow, config.MaxRequestsInWindow);
+            "[{machineName}] RequestCount during last {windowInSeconds} seconds: {requestCountInWindow} (Max: {maxRequestsInWindow})",
+            Environment.MachineName,
+            config.WindowInSeconds,
+            requestCountInWindow,
+            config.MaxRequestsInWindow);
 
         if (maxRequestsExceeded)
         {

@@ -13,10 +13,10 @@ public class RateLimitedController : ControllerBase
     {
         _apiKeyExtractor = apiKeyExtractor;
     }
-    
+
     [HttpGet("apiKey")]
     public IActionResult GetApiKey()
     {
-        return new JsonResult(new { key = _apiKeyExtractor.GetApiKey()} );
+        return new JsonResult(new { Key = _apiKeyExtractor.GetApiKey(), Environment.MachineName });
     }
 }

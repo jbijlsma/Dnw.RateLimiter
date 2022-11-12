@@ -57,7 +57,8 @@ internal class FixedWindowRateLimiter
         var logEventLevel = maxRequestsExceeded ? LogEventLevel.Warning : LogEventLevel.Debug;
         _log.Write(
             logEventLevel,
-            "RequestCount in fixed window from {windowStart} until {windowEnd}: {requestCountInWindow} (Max: {maxRequestsInWindow})",
+            "[{machineName}] RequestCount in fixed window from {windowStart} until {windowEnd}: {requestCountInWindow} (Max: {maxRequestsInWindow})",
+            Environment.MachineName,
             GetLocalTime(redisResultArray[0]),
             GetLocalTime(redisResultArray[1]),
             requestCountInWindow,

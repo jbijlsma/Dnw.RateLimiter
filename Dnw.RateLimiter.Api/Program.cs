@@ -15,7 +15,6 @@ public class Program
 
         var logger = new LoggerConfiguration()
             .ReadFrom.Configuration(builder.Configuration)
-            .Enrich.FromLogContext()
             .CreateLogger();
 
         Log.Logger = logger;
