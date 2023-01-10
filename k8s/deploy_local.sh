@@ -5,17 +5,17 @@ RELEASE_NAME=dnw-rate-limiter-api
 
 # Create the new cluster with a private container / image registry
 echo "Create new KinD cluster"
-. ./create_kind_cluster.sh
+#. ./create_kind_cluster.sh
 
 # Preload 3rd party images
 docker pull registry.k8s.io/ingress-nginx/controller:v1.5.1
 kind load docker-image registry.k8s.io/ingress-nginx/controller:v1.5.1
 
-docker pull mcr.microsoft.com/dotnet/sdk:6.0-alpine
-kind load docker-image mcr.microsoft.com/dotnet/sdk:6.0-alpine
+docker pull mcr.microsoft.com/dotnet/sdk:7.0-alpine
+kind load docker-image mcr.microsoft.com/dotnet/sdk:7.0-alpine
 
-docker pull mcr.microsoft.com/dotnet/aspnet:6.0-alpine
-kind load docker-image mcr.microsoft.com/dotnet/aspnet:6.0-alpine
+docker pull mcr.microsoft.com/dotnet/aspnet:7.0-alpine
+kind load docker-image mcr.microsoft.com/dotnet/aspnet:7.0-alpine
 
 docker pull arm64v8/redis:latest
 kind load docker-image arm64v8/redis:latest

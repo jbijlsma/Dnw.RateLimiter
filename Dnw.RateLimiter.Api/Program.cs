@@ -28,7 +28,7 @@ public class Program
             // allowAdmin is necessary to be able to clear the keys on startup
             var redisConnectionString = builder.Configuration.GetValue<string>("RedisConnectionString");
             builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
-                ConnectionMultiplexer.Connect(redisConnectionString));
+                ConnectionMultiplexer.Connect(redisConnectionString!));
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<IApiKeyExtractor, ApiKeyExtractor>();
 

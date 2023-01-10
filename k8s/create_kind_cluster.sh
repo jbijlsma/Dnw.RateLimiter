@@ -55,3 +55,11 @@ data:
     host: "localhost:${reg_port}"
     help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
 EOF
+
+# Preload 3rd party images
+docker pull registry.k8s.io/ingress-nginx/controller:v1.5.1
+kind load docker-image registry.k8s.io/ingress-nginx/controller:v1.5.1
+
+# Install nginx as ingress
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=90s

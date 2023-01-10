@@ -15,6 +15,11 @@ spec:
       containers:
         - name: {{ .Release.Name }}
           image: {{ .Values.PrivateContainerRegistry }}{{ .Release.Name }}:latest
+          env:
+          - name: "RATE_LIMITER_TYPE"
+            value: "FixedWindow"
+          - name: "CLEAR_REDIS_DATABASE"
+            value: "True"
           ports:
             - containerPort: {{ .Values.RateLimiterApiServicePort }}
 ---
